@@ -10,8 +10,6 @@
 #define PORT 8060
 #define MSG_LIM 256
 
-void chat(int);
-
 void error(const char* msg) {
     perror(msg);
     exit(1);
@@ -21,6 +19,7 @@ int main(int argc,char **argv) {
     struct sockaddr_in serv_addr;
     int sockfd;
     struct hostent *server;
+    char buffer[MSG_LIM];
  
     bzero(&serv_addr, sizeof serv_addr);
 
@@ -35,19 +34,16 @@ int main(int argc,char **argv) {
         error(NULL);
 
     printf("INF: connection established\n");
-    chat(sockfd);
-    
+
+    while (1) {
+        bzero(buffer, MSG_LIM);
+        fgets(buffer, MSG_LIM - 1, stdin);
+        write(sockfd, buffer, strlen(buffer) + 1);
+        
+        bzero(buffer, MSG_LIM);
+        read(sockfd, buffer, MSG_LIM - 1);
+        printf("server: %s\n", buffer);
+    }
+
     return 0;
-}
-
-void chat(int socket) {
-    char buffer[MSG_LIM];
-
-    bzero(buffer, MSG_LIM);
-    fgets(buffer, MSG_LIM - 1, stdin);
-    write(socket, buffer, strlen(buffer) + 1);
-    
-    bzero(buffer, MSG_LIM);
-    read(socket, buffer, MSG_LIM - 1);
-    printf("server: %s\n", buffer);
 }

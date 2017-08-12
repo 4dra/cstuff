@@ -27,17 +27,19 @@ int main() {
     bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
 
     listen(sockfd, CLIENTS_LIM);
-
     comfd = accept(sockfd, (struct sockaddr*) NULL, NULL);
     
-    bzero(buffer, MSG_LIM);
-    read(comfd, buffer, MSG_LIM - 1);
-    
-    printf("client: %s",buffer);
+    while (1) {
+        
+        bzero(buffer, MSG_LIM);
+        read(comfd, buffer, MSG_LIM - 1);
+        
+        printf("client: %s",buffer);
 
-    char response[] = "ty";
+        char response[] = "fu";
 
-    write(comfd, response, strlen(response) + 1);
+        write(comfd, response, strlen(response) + 1);
+    }
 
     close(comfd);
     return 0;
