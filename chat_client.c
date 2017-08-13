@@ -6,11 +6,12 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <pthread.h>
  
 #define PORT 8060
 #define MSG_LIM 256
 
-void chat(int);
+void* read_messages(void*);
 
 void error(const char* msg) {
     perror(msg);
@@ -21,6 +22,8 @@ int main(int argc,char **argv) {
     struct sockaddr_in serv_addr;
     int sockfd;
     struct hostent *server;
+    char buffer[MSG_LIM];
+    pthread_t tid;
  
     bzero(&serv_addr, sizeof serv_addr);
 
@@ -34,20 +37,34 @@ int main(int argc,char **argv) {
     if (connect(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0)
         error(NULL);
 
-    printf("INF: connection established\n");
-    chat(sockfd);
+    printf("SYS: connection established\n");
+
+    pthread_create(&tid, NULL, &read_messages, (void*)sockfd);
     
+    while (1) {
+        bzero(buffer, MSG_LIM);
+        fgets(buffer, MSG_LIM - 1, stdin);
+        write(sockfd, buffer, strlen(buffer) + 1);    
+    }
+
     return 0;
 }
 
-void chat(int socket) {
+void* read_messages(void* sockfdp) {
+    int sockfd = (intptr_t)sockfdp;
     char buffer[MSG_LIM];
+    int n;
 
-    bzero(buffer, MSG_LIM);
-    fgets(buffer, MSG_LIM - 1, stdin);
-    write(socket, buffer, strlen(buffer) + 1);
-    
-    bzero(buffer, MSG_LIM);
-    read(socket, buffer, MSG_LIM - 1);
-    printf("server: %s\n", buffer);
+    while (1) {
+        bzero(buffer, MSG_LIM);
+        n = read(sockfd, buffer, MSG_LIM - 1);
+        
+        if (n <= 0) {
+            printf("SYS: disconnected by server\n");
+            close(sockfd);
+            exit(1);
+        }
+        
+        printf("%s", buffer);
+    }
 }
