@@ -1,17 +1,24 @@
 #include <stdio.h>
+<<<<<<< HEAD
 #include <stdlib.h>
+=======
+>>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
+<<<<<<< HEAD
 #include <pthread.h>
+=======
+>>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 
 #define CLIENTS_LIM 5
 #define PORT 8060
 #define MSG_LIM 256
 
+<<<<<<< HEAD
 void* read_messages(void*);
 
 void error(const char* msg) {
@@ -25,6 +32,12 @@ int main() {
     struct sockaddr_in serv_addr, cli_addr;
     int pid, sockfd, comfd;
     pthread_t tid;
+=======
+int main() {
+    struct sockaddr_in serv_addr, cli_addr;
+    int pid, sockfd, comfd;
+    char buffer[MSG_LIM];
+>>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 
     signal(SIGCHLD, SIG_IGN);
 
@@ -38,6 +51,7 @@ int main() {
     bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
 
     listen(sockfd, CLIENTS_LIM);
+<<<<<<< HEAD
 
     while (1) {
         comfd = accept(sockfd, (struct sockaddr*) NULL, NULL);
@@ -95,4 +109,22 @@ void* read_messages(void* comfdp) {
     }
 
     close(comfd);
+=======
+    comfd = accept(sockfd, (struct sockaddr*) NULL, NULL);
+    
+    while (1) {
+        
+        bzero(buffer, MSG_LIM);
+        read(comfd, buffer, MSG_LIM - 1);
+        
+        printf("client: %s",buffer);
+
+        char response[] = "fu";
+
+        write(comfd, response, strlen(response) + 1);
+    }
+
+    close(comfd);
+    return 0;
+>>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 }

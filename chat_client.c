@@ -39,7 +39,7 @@ int main(int argc,char **argv) {
 
     printf("SYS: connection established\n");
 
-    pthread_create(&tid, NULL, &read_messages, (void*)sockfd);
+    pthread_create(&tid, NULL, &read_messages, (void*)(intptr_t)sockfd);
     
     while (1) {
         bzero(buffer, MSG_LIM);
