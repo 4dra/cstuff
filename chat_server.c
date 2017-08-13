@@ -1,25 +1,19 @@
 #include <stdio.h>
-<<<<<<< HEAD
 #include <stdlib.h>
-=======
->>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
-<<<<<<< HEAD
 #include <pthread.h>
-=======
->>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 
 #define CLIENTS_LIM 5
 #define PORT 8060
 #define MSG_LIM 256
 
-<<<<<<< HEAD
 void* read_messages(void*);
+void write_to_peers(int, char*); 
 
 void error(const char* msg) {
     perror(msg);
@@ -31,13 +25,8 @@ int CLIENTS[2] = { -1, -1 };
 int main() {
     struct sockaddr_in serv_addr, cli_addr;
     int pid, sockfd, comfd;
-    pthread_t tid;
-=======
-int main() {
-    struct sockaddr_in serv_addr, cli_addr;
-    int pid, sockfd, comfd;
     char buffer[MSG_LIM];
->>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
+    pthread_t tid;
 
     signal(SIGCHLD, SIG_IGN);
 
@@ -51,12 +40,13 @@ int main() {
     bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr));
 
     listen(sockfd, CLIENTS_LIM);
-<<<<<<< HEAD
 
     while (1) {
         comfd = accept(sockfd, (struct sockaddr*) NULL, NULL);
         
-        printf("SYS: client %d connected.\n", comfd);
+        bzero(buffer, MSG_LIM);
+        sprintf(buffer, "SYS: client %d connected.\n", comfd);
+        printf("%s", buffer);
 
         if (CLIENTS[0] == -1) {
             CLIENTS[0] = comfd;
@@ -67,6 +57,8 @@ int main() {
             close(comfd);
             continue;
         }
+
+        write_to_peers(comfd, buffer);
 
         pthread_create(&tid, NULL, &read_messages, (void*)(intptr_t)comfd);
     }
@@ -81,18 +73,22 @@ void* read_messages(void* comfdp) {
     char buffer[MSG_LIM], res_buffer[MSG_LIM];
     int n;
     
-    while (1) { 
+    while (1) {
+        bzero(res_buffer, MSG_LIM);
         bzero(buffer, MSG_LIM);
+
         n = read(comfd, buffer, MSG_LIM - 1);
         
         if (n <= 0) {
-            printf("SYS: client %d disconnected.\n", comfd);
+            sprintf(res_buffer, "SYS: client %d disconnected.\n", comfd);
+            printf("%s", res_buffer);
 
-            for (int i = 0; i < 2; i++) {
-                if (comfd == CLIENTS[i]) {
-                    CLIENTS[i] = -1;
-                }
-            }
+            write_to_peers(comfd, res_buffer);
+
+            if (comfd == CLIENTS[0]) 
+                CLIENTS[0] = -1;
+            else if (comfd == CLIENTS[1])
+                CLIENTS[1] = -1;
 
             close(comfd);
             pthread_exit(NULL);
@@ -101,30 +97,16 @@ void* read_messages(void* comfdp) {
         sprintf(res_buffer, "[client %d]: %s", comfd, buffer);
         printf("%s", res_buffer);
 
-        for (int i = 0; i < 2; i++) {
-            if (comfd != CLIENTS[i]) {
-                write(CLIENTS[i], res_buffer, strlen(res_buffer) + 1);
-            }
+        write_to_peers(comfd, res_buffer);
+    }
+
+    close(comfd);
+}
+
+void write_to_peers(int comfd, char* msg) { 
+    for (int i = 0; i < 2; i++) {
+        if (comfd != CLIENTS[i]) {
+            write(CLIENTS[i], msg, strlen(msg) + 1);
         }
     }
-
-    close(comfd);
-=======
-    comfd = accept(sockfd, (struct sockaddr*) NULL, NULL);
-    
-    while (1) {
-        
-        bzero(buffer, MSG_LIM);
-        read(comfd, buffer, MSG_LIM - 1);
-        
-        printf("client: %s",buffer);
-
-        char response[] = "fu";
-
-        write(comfd, response, strlen(response) + 1);
-    }
-
-    close(comfd);
-    return 0;
->>>>>>> d85d5dc3eb408f8ab36ec697570e7ba19d9896a4
 }
